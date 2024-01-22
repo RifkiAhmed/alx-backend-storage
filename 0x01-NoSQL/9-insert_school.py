@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 
 def insert_school(mongo_collection, **kwargs):
-    ''''''
+    '''Insert a document in the collection'''
     if kwargs:
         doc = mongo_collection.insert_one(kwargs)
         return doc.inserted_id
