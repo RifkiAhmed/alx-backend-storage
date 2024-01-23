@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+'''Provide some stats about Nginx logs stored in mongoDB'''
 from pymongo import MongoClient
 
 client = MongoClient("localhost", 27017)
