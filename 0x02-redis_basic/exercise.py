@@ -19,10 +19,11 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Optional[Callable]
+    def get(self, key: str, fn: Optional[Callable] = None
             ) -> Union[None, str, bytes, int, float]:
         '''Return the key value converted to desired format'''
-        return fn(self._redis.get(key)) if fn else self._redis.get(key)
+        value = self._redis.get(key)
+        return fn(value) if fn and value else self._redis.get(key)
 
     def get_str(self, key: str) -> Union[str, None]:
         '''Return the key value converted to string format'''
@@ -33,14 +34,14 @@ class Cache:
         return self.get(key, int)
 
 
-# cache = Cache()
+cache = Cache()
 
-# TEST_CASES = {
-#     b"foo": None,
-#     123: int,
-#     "bar": lambda d: d.decode("utf-8")
-# }
+TEST_CASES = {
+    b"foo": None,
+    123: int,
+    "bar": lambda d: d.decode("utf-8")
+}
 
-# for value, fn in TEST_CASES.items():
-#     key = cache.store(value)
-#     assert cache.get(key, fn=fn) == value
+for value, fn in TEST_CASES.items():
+    key = cache.store(value)
+    assert cache.get(key, fn=fn) == value
