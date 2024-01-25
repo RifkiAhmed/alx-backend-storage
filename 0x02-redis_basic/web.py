@@ -13,12 +13,12 @@ def cache_with_expiry(method: Callable) -> Callable:
     '''Define a decorator that tracks and sets an expired web cache'''
     @wraps(method)
     def wrapper(url: str) -> str:
-        _redis.incr(f"count:{url}")
+        _redis.incr("count:{}".format(url))
         cached = _redis.get("{}".format(url))
         if cached:
             return cached.decode("utf-8")
         response = method(url)
-        _redis.set("{}".format(url), response, 10)
+        _redis.setex("{}".format(url), 10, response)
         return response
     return wrapper
 
