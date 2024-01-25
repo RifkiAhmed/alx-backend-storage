@@ -7,13 +7,28 @@ import uuid
 
 
 def count_calls(method: Callable) -> Callable:
-    '''Count how many times methods are called'''
+    '''Decorator to count how many times methods are called'''
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         ''''''
         key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwargs)
+    return wrapper
+
+
+def call_history(method: Callable) -> Callable:
+    '''Decorator to store the history of inputs and outputs for methods'''
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        ''''''
+        key = method.__qualname__
+        inputs = "{}:inputs".format(key)
+        outputs = "{}:outputs".format(key)
+        self._redis.rpush(inputs, str(args))
+        output = method(self, *args, **kwargs)
+        self._redis.rpush(outputs, str(output))
+        return output
     return wrapper
 
 
@@ -26,6 +41,7 @@ class Cache:
         self._redis.flushdb()
 
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         '''Store the input data in Redis instance'''
         key: str = str(uuid.uuid4())
@@ -47,11 +63,21 @@ class Cache:
         return self.get(key, int)
 
 
-# cache = Cache()
+cache = Cache()
 
-# cache.store(b"first")
-# print(cache.get(cache.store.__qualname__))
+s1 = cache.store("first")
+print(s1)
+s2 = cache.store("secont")
+print(s2)
+s3 = cache.store("third")
+print(s3)
 
-# cache.store(b"second")
-# cache.store(b"third")
-# print(cache.get(cache.store.__qualname__))
+inputs = cache._redis.lrange(
+    "{}:inputs".format(
+        cache.store.__qualname__), 0, -1)
+outputs = cache._redis.lrange(
+    "{}:outputs".format(
+        cache.store.__qualname__), 0, -1)
+
+print("inputs: {}".format(inputs))
+print("outputs: {}".format(outputs))
