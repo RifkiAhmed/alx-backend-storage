@@ -23,5 +23,6 @@ def cache_with_expiry(method: Callable) -> Callable:
 
 @cache_with_expiry
 def get_page(url: str) -> str:
+    '''Return the content of an HTTP request'''
     response = requests.get(url)
     return response.text
