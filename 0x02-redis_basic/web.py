@@ -4,19 +4,21 @@ from functools import wraps
 import redis
 import requests
 from typing import Callable
+import time
+
+_redis = redis.Redis()
 
 
 def cache_with_expiry(method: Callable) -> Callable:
     '''Define a decorator that tracks and sets an expired web cache'''
     @wraps(method)
-    def wrapper(*args):
-        _redis = redis.Redis()
-        _redis.incr("count:{}".format(args[0]))
-        cached = _redis.get("{}".format(args[0]))
+    def wrapper(url: str) -> str:
+        _redis.incr(f"count:{url}")
+        cached = _redis.get("{}".format(url))
         if cached:
             return cached.decode("utf-8")
-        response = method(args[0])
-        _redis.set("{}".format(args[0]), response, 10)
+        response = method(url)
+        _redis.set("{}".format(url), response, 10)
         return response
     return wrapper
 
@@ -26,3 +28,10 @@ def get_page(url: str) -> str:
     '''Return the content of an HTTP request'''
     response = requests.get(url)
     return response.text
+
+
+# print(len(get_page("http://google.com")))
+# print(_redis.get("count:http://google.com"))
+# print(len(_redis.get("http://google.com")))
+# time.sleep(12)
+# print(_redis.get("http://google.com")) # -> None
