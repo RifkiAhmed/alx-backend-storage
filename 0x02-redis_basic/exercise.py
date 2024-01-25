@@ -41,7 +41,8 @@ def replay(method: Callable) -> None:
     inputs = cache._redis.lrange(inputs, 0, -1)
     outputs = cache._redis.lrange(outputs, 0, -1)
 
-    print("{} was called {} times:".format(key, len(inputs)))
+    print("{} was called {} times:".format(
+        key, cache.get(key).decode('utf-8')))
     for args, output in zip(inputs, outputs):
         args_str = args.decode('utf-8')  # Decode bytes to string
         output_str = output.decode('utf-8')  # Decode bytes to string
@@ -79,11 +80,11 @@ class Cache:
         return self.get(key, int)
 
 
-# cache = Cache()
-# cache.store("foo")
-# cache.store("bar")
-# cache.store(42)
-# replay(cache.store)
+cache = Cache()
+cache.store("foo")
+cache.store("bar")
+cache.store(42)
+replay(cache.store)
 # Cache.store was called 3 times:
 # Cache.store(*('foo',)) -> 13bf32a9-a249-4664-95fc-b1062db2038f
 # Cache.store(*('bar',)) -> dcddd00c-4219-4dd7-8877-66afbe8e7df8
